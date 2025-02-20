@@ -1,11 +1,11 @@
 [
 {
-  "modid": lbs",
-  "name": "Luna's BinSnipeer",
-  "description": "Hypixel Skyblock BinSniper",
+  "modid": "lunas_binsniper",
+  "name": "Luna's BinSniper",
+  "description": "BinSniper presents by. luna724 & NotTomochie",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "",
+  "url": "https://github.com/luna724/luna-s-BinSniper",
   "updateUrl": "",
   "authorList": ["luna724", "@NotTomochie"],
   "credits": "by luna724. baseMod presents by. @NotTomochie",

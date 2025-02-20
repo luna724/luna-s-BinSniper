@@ -7,7 +7,7 @@
  *  net.minecraft.util.EnumChatFormatting
  *  net.minecraft.util.IChatComponent
  */
-package net.luna724.iloveichika.binsniper.utils;
+package luna724.iloveichika.binsniper.utils;
 
 import java.io.File;
 import java.io.IOException;

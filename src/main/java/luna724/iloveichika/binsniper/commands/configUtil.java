@@ -1,6 +1,6 @@
-package net.luna724.iloveichika.binsniper.commands;
+package luna724.iloveichika.binsniper.commands;
 
-import net.luna724.iloveichika.binsniper.utils.Util;
+import luna724.iloveichika.binsniper.utils.Util;
 import net.minecraft.util.ChatComponentText;
 
 import static net.luna724.iloveichika.binsniper.logics.debugUtil.autoErrorReportingService;

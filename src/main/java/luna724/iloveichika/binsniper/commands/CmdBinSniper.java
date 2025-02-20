@@ -6,7 +6,7 @@
  *  net.minecraft.command.CommandException
  *  net.minecraft.command.ICommandSender
  */
-package net.luna724.iloveichika.binsniper.commands;
+package luna724.iloveichika.binsniper.commands;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import luna724.iloveichika.binsniper.BinSniper;
 import net.luna724.iloveichika.binsniper.Main;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -29,10 +30,6 @@ import static net.luna724.iloveichika.binsniper.logics.sentLimbo.sentToLimbo;
 
 public class CmdBinSniper
         extends CommandBase {
-    private static boolean willbedeleted1(int n, int n2) {
-        return n <= n2;
-    }
-
     private static void categoryHelp() {
         Util.sendAir();
         Util.send("§6BinSniper ("+ Main.MODID +") by Tomochie @NotTomochie");
@@ -86,7 +83,7 @@ public class CmdBinSniper
     private static void help() {
         Util.sendAir();
         Util.send("§dLuna's BinSni" +
-                "per ("+ Main.VERSION +") by. luna724");
+                "per ("+ BinSniper.VERSION +") by. luna724");
         Util.sendAir();
         Util.send("§f/bs timeout 10000 * タイムアウトまでの時間 (設定非推奨)");
         Util.send("§f/bs delay 1000 * 遅延する 時間の指定 (設定非推奨)");
