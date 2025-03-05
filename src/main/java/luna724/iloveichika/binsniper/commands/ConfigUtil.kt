@@ -47,7 +47,7 @@ class ConfigUtil {
         }
         catch (e: Exception) {
             e.printStackTrace()
-            ChatLib.chat("§4設定の変更時にエラーが発生しました。詳しくはログみろ")
+            ChatLib.chat("§4設定の変更時にエラーが発生しました。($targetConfig)")
             return false
         }
     }
@@ -62,7 +62,7 @@ class ConfigUtil {
         }
         catch (e: Exception) {
             e.printStackTrace()
-            ChatLib.chat("§4設定の取得時にエラーが発生しました。詳しくはログみろ")
+            ChatLib.chat("§4設定の取得時にエラーが発生しました。($targetConfig)")
             return null
         }
     }
@@ -77,7 +77,7 @@ class ConfigUtil {
         }
         catch (e: Exception) {
             e.printStackTrace()
-            ChatLib.chat("§4設定の取得時にエラーが発生しました。詳しくはログみろ")
+            ChatLib.chat("§4Boolean設定の取得時にエラーが発生しました。($targetConfig) ($e)")
             return false
         }
     }

@@ -1,14 +1,14 @@
-package net.luna724.iloveichika.binsniper.logics;
+package luna724.iloveichika.binsniper.logics;
 
-import net.luna724.iloveichika.binsniper.utils.Analytics;
-import net.luna724.iloveichika.binsniper.utils.Wrapper;
+import luna724.iloveichika.binsniper.utils.Analytics;
 import net.minecraft.util.ChatComponentText;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static net.luna724.iloveichika.binsniper.WebHookUrls.autoErrorReporter;
-import static net.luna724.iloveichika.binsniper.utils.Wrapper.mc;
+import static luna724.iloveichika.binsniper.BinSniper.ChatLib;
+import static luna724.iloveichika.binsniper.BinSniper.mc;
+import static luna724.iloveichika.binsniper.WebHookUrls.autoErrorReporter;
 
 public class debugUtil {
     public static void autoErrorReportingService(Exception e) {
@@ -16,7 +16,7 @@ public class debugUtil {
             @Override
             public void run() {
                 try {
-                    String username = Wrapper.mc.getSession().getUsername();
+                    String username = mc.getSession().getUsername();
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);
@@ -31,9 +31,7 @@ public class debugUtil {
                     );
                 } catch (Exception e) {
                     e.printStackTrace();
-                    mc.thePlayer.addChatMessage(new ChatComponentText(
-                            "§4エラーの自動送信時にエラーが発生しました。 (at debugUtil:autoErrorReportingService())"
-                    ));
+                    ChatLib.chat("§4エラーの自動送信時にエラーが発生しました。 (at debugUtil:autoErrorReportingService())");
                 }
             }
         }).start();
@@ -44,7 +42,7 @@ public class debugUtil {
             @Override
             public void run() {
                 try {
-                    String username = Wrapper.mc.getSession().getUsername();
+                    String username = mc.getSession().getUsername();
                     String jsonObj = Analytics.setJsonObj(
                             message, username, null
                     );
@@ -53,9 +51,7 @@ public class debugUtil {
                     );
                 } catch (Exception e) {
                     e.printStackTrace();
-                    mc.thePlayer.addChatMessage(new ChatComponentText(
-                            "§4メッセージの送信中にエラーが発生しました。"
-                    ));
+                    ChatLib.chat("§4メッセージの送信中にエラーが発生しました。");
                 }
             }
         }).start();

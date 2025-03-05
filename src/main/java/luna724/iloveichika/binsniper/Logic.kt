@@ -1,21 +1,32 @@
 package luna724.iloveichika.binsniper
 
-import luna724.iloveichika.binsniper.BinSniper.Companion.ChatLib
-import luna724.iloveichika.binsniper.BinSniper.Companion.configUtil
-import luna724.iloveichika.binsniper.BinSniper.Companion.mc
-import luna724.iloveichika.binsniper.utils.ItemChecker
-import net.minecraft.client.gui.inventory.GuiChest
-import net.minecraft.inventory.Container
-import net.minecraft.inventory.ContainerChest
-import net.minecraft.item.Item
-import net.minecraftforge.event.world.WorldEvent
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
-import net.minecraftforge.fml.common.gameevent.TickEvent
 import gg.skytils.skytilsmod.utils.ItemUtil
+import luna724.iloveichika.binsniper.BinSniper.Companion.ChatLib
+import luna724.iloveichika.binsniper.BinSniper.Companion.config
+import luna724.iloveichika.binsniper.BinSniper.Companion.configUtil
+import luna724.iloveichika.binsniper.BinSniper.Companion.keyBinSniper
+import luna724.iloveichika.binsniper.BinSniper.Companion.logger
+import luna724.iloveichika.binsniper.BinSniper.Companion.mc
+import luna724.iloveichika.binsniper.config.SessionConfig
+import luna724.iloveichika.binsniper.logics.debugUtil.autoErrorReportingService
+import luna724.iloveichika.binsniper.utils.Analytics
+import luna724.iloveichika.binsniper.utils.ItemChecker
+import luna724.iloveichika.binsniper.utils.ScoreboardUtil.getPurse
+import luna724.iloveichika.binsniper.utils.Util
+import net.minecraft.inventory.ContainerChest
+import net.minecraft.inventory.Slot
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.util.EnumChatFormatting
+import net.minecraftforge.client.event.ClientChatReceivedEvent
+import net.minecraftforge.client.event.GuiScreenEvent
+import net.minecraftforge.event.world.WorldEvent
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import net.minecraftforge.fml.common.gameevent.TickEvent
 import org.apache.commons.lang3.math.NumberUtils
+import org.lwjgl.input.Keyboard
+import java.text.NumberFormat
 
 class Logic {
     companion object {
@@ -30,6 +41,7 @@ class Logic {
     private val worldMovingCooldown: Long = 5000L // TODO 5000L を設定できるように
     private val maxUUIDCacheSize: Int = 40
 
+    private var userConfig: SessionConfig = SessionConfig()
     // すでに購入した UUID を管理するセット
     private var sessionUUID: MutableList<String> = mutableListOf()
     private var lastTime: Long = 0L
@@ -39,6 +51,11 @@ class Logic {
     private var sessionCheckCount: Int = 0
     private var isWorldChanged: Boolean = false
 
+    // StackOverflowError を回避するため onTick から Logic を呼び出すための変数
+    private var runLogic: Boolean = true
+    private var currentStep: Int = 0
+    private var isError: Boolean = false
+
     /**
      * セッションを初期化する
      * 開始時に必ず実行する
@@ -47,6 +64,7 @@ class Logic {
         sessionBuyed = 0
         sessionStartAt = 0
         sessionCheckCount = 0
+        currentStep = 0
         lastSeller = ""
         isWorldChanged = false
         lastTime = System.currentTimeMillis()
@@ -56,30 +74,33 @@ class Logic {
         if (configUtil.getBooleanConfig("BackCompatibility")) {
             reforges.addAll(accessoryReforges)
         }
+
+        userConfig = config.loadPlayer()
     }
-
-    // Getter
-    private fun getPlayerId(): String = mc.session.profile.id.toString()
-
     // Checker
-    private fun isBinSniperActive(): Boolean = configUtil.getBooleanConfig("Active")
-    private fun isContainerOpened(): Boolean = mc.thePlayer.openContainer is ContainerChest
-    private fun isGuiChestOpened(): Boolean = mc.currentScreen is GuiChest
     private fun isAuctionBrowserOpened(): Boolean = containerUtil.isAuctionBrowser(mc.thePlayer.openContainer)
-    private fun isUUIDCheckerEnable(): Boolean = configUtil.getBooleanConfig("uuidMode")
+    private fun isUUIDCheckerEnable(): Boolean = userConfig.UUIDMode
     private fun isBuyedUUID(targetUUID: String): Boolean = sessionUUID.contains(targetUUID)
 
     /** */
-    private fun stopSnipe() {
+    fun stopSnipe() {
         val playerId = getPlayerId()
         configUtil.setConfig("Active", false)
         ChatLib.chat("§c動作の停止")
         return
     }
 
+    /** */
+    fun startSnipe() {
+        configUtil.setConfig("Active", true)
+        ChatLib.chat("§a動作の開始")
+        resetSession()
+        return
+    }
+
     /** 設定に基づいてメッセージを送る */
     private fun sendMessage(msg: String) {
-        if (configUtil.getBooleanConfig("Message")) {
+        if (userConfig.Message) {
             ChatLib.chat(msg)
         }
     }
@@ -103,12 +124,12 @@ class Logic {
 
     /** アイテムから販売者のIDを取得 */
     private fun getSeller(itemStack: ItemStack?): String {
-        if (!isBinSniperActive()) return "!None"
+        if (!userConfig.Active) return "!None"
         if (!isGuiChestOpened()) return "!None"
         if (!isContainerOpened()) return "!None"
         if (itemStack == null) return "!None"
 
-        var lore: String = "!None"
+        var lore = "!None"
         val loreList: NBTTagList = itemStack.tagCompound.getCompoundTag("display").getTagList("Lore", 8)
         for (i in 0 until loreList.tagCount()) {
             lore = loreList.getStringTagAt(i).toString()
@@ -122,23 +143,23 @@ class Logic {
 
     /** アイテムからアイテム販売価格を取得 */
     private fun getCost(itemStack: ItemStack?): Int {
-        if (!isBinSniperActive()) return -1
+        if (!userConfig.Active) return -1
         if (!isGuiChestOpened()) return -1
         if (!isContainerOpened()) return -1
         if (itemStack == null) return -1
 
-        if (!configUtil.getConfig("Name").toString().equals("None", true)) {
+        if (!userConfig.Name.equals("None", ignoreCase = true)) {
             // Noneじゃないのにアイテム名が一致しないなら
             val targetItemName = EnumChatFormatting.getTextWithoutFormattingCodes(
                 itemStack.displayName.toString()
             )
-            if (!targetItemName.equals(configUtil.getConfig("Name").toString(), true)) return -1
+            if (!targetItemName.equals(userConfig.Name, ignoreCase = true)) return -1
         }
 
         // メイン処理
         var price: Int = -1
-        var lore: String = ""
-        val loreList: NBTTagList = itemStack.tagCompound.getCompoundTag("display").getTagList("Lore", 8)
+        var lore = ""
+        val loreList = getLoreFromItemStack(itemStack)
         for (i in 0 until loreList.tagCount()) {
             lore = loreList.getStringTagAt(i)
             if (lore.startsWith("§7Status: §aSold!")) break
@@ -161,10 +182,65 @@ class Logic {
         return price
     }
 
+    /** 実質メイン処理 ページをスワップし続けて検索、購入開始処理を行う */
+    private fun changeAuctionPage(containerChest: ContainerChest) {
+        if (!userConfig.Active) return
+        if (!isGuiChestOpened()) return
+        if (!isContainerOpened()) return
+
+        val snipeMode = userConfig.Mode
+        val nextPageSlot: Slot = containerChest.getSlot(53)
+        if (!nextPageSlot.hasStack) return
+        val itemStack: ItemStack = nextPageSlot.stack ?: return
+
+        if (!containerUtil.isBinOnly(containerChest)) {
+            // BIN Only に戻す
+            clickSlot(52, 0)
+            sendMessage("§b検索条件を BIN Only に変更しています..")
+            return
+        }
+
+        if (!containerUtil.isLowest(containerChest)) {
+            // Lowest Price に戻す
+            clickSlot(50, 0)
+            sendMessage("§b最低金額から検索できるように変更しています..")
+            return
+        }
+
+        sendMessage("検索中.. (${sessionCheckCount}回目のチェック) (購入確定: ${sessionBuyed})")
+
+        if (snipeMode.equals("ALLMODE", ignoreCase = true)) {
+            // ALLMODE: 多分更新しない
+            if (Item.getIdFromItem(itemStack.item) != 262) {
+                val itemStackSlot46 = containerChest.getSlot(46).stack
+                if (Item.getIdFromItem(itemStackSlot46.item) != 262) {
+                    if (containerUtil.isNoFilter(containerChest)) {
+                        clickSlot(51, 1)
+                    } else {
+                        clickSlot(51, 0)
+                    }
+                    return
+                }
+                clickSlot(46, 1)
+                return
+            }
+            clickSlot(53, 0)
+            return
+        }
+        else if (snipeMode.equals("FASTMODE", true)) {
+            if (containerUtil.isNoFilter(containerChest)) {
+                clickSlot(51, 1)
+            }
+            else {
+                clickSlot(51, 0)
+            }
+        }
+    }
+
     /** Step: 0 */
     private fun mainLogic() {
         if (!isAuctionBrowserOpened()) return
-        val openContainer: ContainerChest = mc.thePlayer.openContainer as ContainerChest
+        val openContainer: ContainerChest = getContainerChest()
 
         // AH の 4x6 スロットを繰り返す
         for (i in 0 until 24) {
@@ -182,16 +258,17 @@ class Logic {
                 }
 
                 // antiantimacro
-                if (configUtil.getBooleanConfig("antiantimacro")) {
+                if (userConfig.AntiAntiMacro) {
                     if (Item.getIdFromItem(itemStack.item) == 166) {
                         ChatLib.command("limbo")
                         stopSnipe()
+                        return
                     }
                 }
 
                 // コスト・UUID・lastseller のチェック
                 if (
-                    cost <= configUtil.getConfig("Cost").toString().toInt() &&
+                    cost <= userConfig.Cost &&
                     cost != -1 &&
                     !(lastSeller == getSeller(itemStack) && !isUUIDCheckerEnable())
                 ) {
@@ -201,6 +278,7 @@ class Logic {
                         if (extraAttr != null) {
                             val itemUUID = extraAttr.getString("uuid")
                             if (isBuyedUUID(itemUUID)) {
+                                // UUIDの重複
                                 ChatLib.chat("§6[Debug]: itemUUID: $itemUUID")
                                 ChatLib.chat("§c購入のスキップ.. (購入済みのUUID)")
                             }
@@ -221,22 +299,93 @@ class Logic {
 
             // 1行 (6列) 処理ごとに row が増える: 4行目 (row=3) を処理し終えたらページ切り替え
             if (col == 5 && row == 3) {
-                changePage(openContainer)
+                changeAuctionPage(openContainer)
                 lastTime = System.currentTimeMillis()
             }
         }
     }
 
+    /** Step: 1 */
+    private fun tryToBuyItem() {
+        val openContainer: ContainerChest = getContainerChest()
+        val item: Item = openContainer.getSlot(31)?.stack?.item ?: return
+        val itemId: Int = Item.getIdFromItem(item)
+
+        // 金塊の場合、さっさと買う
+        if (itemId == 371) {
+            clickSlot(31, 0)
+            lastTime = System.currentTimeMillis()
+
+            currentStep = 2
+            return
+        }
+
+        // ベッドの場合
+        else if (itemId == 355) {
+            if (userConfig.SleepOptimization) {
+                // TODO
+            }
+            else { // Optimization がオフなら戻って購入しようとした履歴を消す
+                clickSlot(49, 0)
+                lastSeller = ""
+                sessionUUID.removeAt(sessionUUID.size - 1)
+                lastTime = System.currentTimeMillis()
+                sendMessage("§c購入のキャンセル (アイテムがまだ購入可能でありません)")
+
+                currentStep = 0
+                return
+            }
+        }
+    }
+
+    /** Step: 2 */
+    private fun purchaseItem() {
+        val openContainer: ContainerChest = getContainerChest()
+        val slot: Slot? = openContainer.getSlot(11)
+        if (
+            slot == null ||
+            slot.stack == null ||
+            slot.stack.item == null ||
+            Item.getIdFromItem(
+                slot.stack.item
+            ) != 159
+        ) { // 購入のキャンセル
+            mc.thePlayer.inventory.openInventory(mc.thePlayer)
+            lastTime = System.currentTimeMillis()
+            sendMessage("§c購入のキャンセル 再検索を開始します..")
+
+            currentStep = 3
+            return
+        }
+
+        // 購入処理
+        val purchaseAmount: Int = 0 // TODO
+        clickSlot(11, 0)
+        sendMessage("§a§lスナイプを実行しました")
+        sendMessage("§7- チェック回数: $sessionCheckCount")
+
+        if (!userConfig.Reconnect) {
+            stopSnipe()
+            return
+        }
+
+        currentStep = 100
+        sessionBuyed += 1
+        sessionCheckCount = 0
+        lastTime = System.currentTimeMillis()
+        return
+    }
+
     /** Step: 3 */
     private fun reconnectToAuctionHouse() {
-        if (!configUtil.getBooleanConfig("Reconnect")) {
+        if (!userConfig.Reconnect) {
             stopSnipe()
             return
         }
         ChatLib.command("ah")
         lastTime = System.currentTimeMillis()
 
-        openAuctionBrowser()
+        currentStep = 4
         return
     }
 
@@ -246,7 +395,7 @@ class Logic {
         clickSlot(11, 0)
         lastTime = System.currentTimeMillis()
 
-        isAuctionBrowser()
+        currentStep = 5
         return
     }
 
@@ -254,7 +403,7 @@ class Logic {
     private fun isAuctionBrowser() {
         if (isAuctionBrowserOpened()) {
             lastTime = System.currentTimeMillis()
-            moveCategory()
+            currentStep = 6
             return
         }
         return
@@ -262,14 +411,31 @@ class Logic {
 
     /** Step: 6 */
     private fun moveCategory() {
-        val categoryType: Int = configUtil.getConfig("Category") as Int
         clickSlot(
-            9 * (categoryType - 1), 0
+            9 * (userConfig.Category - 1), 0
         )
         lastTime = System.currentTimeMillis()
-        mainLogic()
+        currentStep = 0
 
         return
+    }
+
+    /** Step: 100 */
+    private fun confirmPurchase() {
+        currentStep = 3
+        isError = false
+        lastTime = System.currentTimeMillis()
+        if (isError) {
+            sessionBuyed -= 1
+            sendMessage("§c落札したアイテムにエラーが発生 カウントを取り消しました")
+            return
+        }
+        else {
+            if (!userConfig.Reconnect) {
+                stopSnipe()
+            }
+            return
+        }
     }
 
     /** Step: 12345 */
@@ -277,22 +443,19 @@ class Logic {
         ChatLib.command("is")
         lastTime = System.currentTimeMillis() + worldMovingCooldown
 
-        reconnectToAuctionHouse()
+        currentStep = 3
         return
     }
 
     @SubscribeEvent
     fun onClientTick(event: TickEvent.ClientTickEvent) {
-        if (!isBinSniperActive()) return
-
-        val reconnect = configUtil.getBooleanConfig("Reconnect")
-        val timeout: Long = configUtil.getConfig("Timeout") as Long
+        if (!userConfig.Active) return
 
         try {
             // タイムアウト処理
-            if (System.currentTimeMillis() - lastTime > timeout) {
+            if (System.currentTimeMillis() - lastTime > userConfig.Timeout) {
                 mc.thePlayer.inventory.openInventory(mc.thePlayer)
-                if (!reconnect) {
+                if (!userConfig.Reconnect) {
                     stopSnipe()
                     return
                 }
@@ -300,6 +463,7 @@ class Logic {
                 lastTime = System.currentTimeMillis()
                 sendMessage("§b動作のタイムアウト オークションの復帰を試みます")
 
+                // ここではdelay待機を行わない
                 openAuctionBrowser()
                 return
             }
@@ -310,7 +474,7 @@ class Logic {
                     isWorldChanged = false
                     lastTime = System.currentTimeMillis() + worldMovingCooldown // TODO 5000L を設定できるように
 
-                    backToIsland()
+                    currentStep = 12345
                     return
                 }
             }
@@ -318,18 +482,138 @@ class Logic {
             // チェストを開いていないならパス
             if (!isContainerOpened()) return
 
-
+            // TODO
+            mainLogic()
         }
-        catch (e: Exception) {}
+        catch (e: Exception) {
+            e.printStackTrace()
+            logger.error(e)
+        }
     }
 
     /** ワールド変更検知 */
     @SubscribeEvent
     fun onWorldChange(event: WorldEvent.Unload) {
         if (mc.isGamePaused) return
-        if (!isBinSniperActive()) return
-        if (!configUtil.getBooleanConfig("Reconnect")) return
+        if (!userConfig.Active) return
+        if (!userConfig.Reconnect) return
 
         isWorldChanged = true
+    }
+
+    /** 買った際にエラーが起きていないかを確認
+     * また、購入通知を送信する
+     */
+    @SubscribeEvent
+    fun onChat(event: ClientChatReceivedEvent) {
+        val chat = EnumChatFormatting.getTextWithoutFormattingCodes(event.message.unformattedText)
+
+        if (chat.startsWith("You purchased")) {
+            Thread({
+                try {
+                    Thread.sleep(2000)
+                }
+                catch (e: InterruptedException) {
+                    println("Exception in sending webhook onPurchased: ")
+                    e.printStackTrace()
+                }
+                var content: String
+                val username = mc.session.username
+                try {
+                    val itemForPrice: String = chat.replace("You purchased", "");
+                    val onlyPrices: Array<String?> =
+                        itemForPrice.split(" for ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                    val onlyPrice = onlyPrices[onlyPrices.size - 1]!!.replace(" coins!", "")
+                    val onlyItem = itemForPrice.replace(" for $onlyPrice coins!", "")
+                    val remainPurse: Int = getPurse()
+                    val numberInstance = NumberFormat.getNumberInstance()
+
+                    content =
+                        "``` $username: Purchased \"" + onlyItem.trim { it <= ' ' } + "\" for " + onlyPrice + " coins!\n- (Purse Remaining: " + formatCoinToString(
+                            remainPurse.toDouble()
+                        ) + ")```"
+                }
+                catch (e: Exception) {
+                    e.printStackTrace();
+                    content = "**Error in Parsing text.**\n```$e```\n```rawText: $chat```";
+                }
+                /*
+                    ```username Purchased item for price coins!```
+                     */
+                val jsonObj: String = Analytics.setJsonObj(content, username, null)
+                Analytics.requestWeb(jsonObj, WebHookUrls.purchasedItemNotification)
+            }).start()
+        }
+        else if (chat.contains("There was an error with the auction house!")) {
+            isError = true
+        }
+        return
+    }
+
+    /** 開始処理 */
+    @SubscribeEvent
+    fun onKey(event: GuiScreenEvent.KeyboardInputEvent) {
+        if (!isGuiChestOpened()) return
+        if (mc.thePlayer.openContainer == null) return
+        if (Keyboard.isKeyDown(mc.gameSettings.keyBindSneak.keyCode) ||
+            Keyboard.isKeyDown(1) ) {
+            if (userConfig.Active) {
+                stopSnipe()
+                return
+            }
+        }
+        else if (Keyboard.isKeyDown(keyBinSniper.keyCode)) {
+            if (keyBinSniper.keyCode == 0) return
+            if (userConfig.Active) {
+                stopSnipe()
+                return
+            }
+            // スタート処理
+            val inventoryContainer: ContainerChest = getContainerChest()
+            if (containerUtil.isAnvil(inventoryContainer)) {
+                ChatLib.chat("§a合成モードの開始")
+                currentStep = -10
+                startSnipe()
+                return
+            }
+            else if (containerUtil.isPending(inventoryContainer)) {
+                ChatLib.chat("§a回収モードの開始")
+                currentStep = -1
+                startSnipe()
+                return
+            }
+            else {
+                val numberInstance: NumberFormat = NumberFormat.getNumberInstance()
+                Util.sendAir()
+                Util.send("§aスナイプの開始")
+                Util.sendAir()
+                Util.send("§7現在の設定一覧:")
+                Util.send("§7- Coin: §6" + numberInstance.format(configUtil.getConfig("Cost")) + "/コイン")
+                Util.send("§7- Category: §6" + configUtil.getConfig("Category") + "/番")
+                Util.send("§7- Amount: §6∞/個")
+                Util.send("§7- Name: §6" + configUtil.getConfig("Name"))
+                Util.send("§7- Mode: §6" + configUtil.getConfig("Mode"))
+                Util.sendAir()
+
+                startSnipe()
+                Thread({
+                    try {
+                        val username = mc.session.username.toString()
+                        val content = ("```${username} has Started sniping! (" +
+                                numberInstance.format(userConfig.Cost) +
+                                " coins)\n(Delay: " + userConfig.Delay + ") | (Start Purse: " + formatCoinToString(
+                                getPurse().toDouble()) + ")```");
+                        Analytics.requestWeb(
+                            Analytics.setJsonObj(content, null, null), WebHookUrls.purchasedItemNotification
+                        )
+                    }
+                    catch (e: Exception) {
+                        e.printStackTrace()
+                        autoErrorReportingService(e)
+                    }
+                }).start()
+            }
+
+        }
     }
 }

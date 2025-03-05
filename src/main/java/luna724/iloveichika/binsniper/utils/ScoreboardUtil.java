@@ -1,19 +1,15 @@
-package net.luna724.iloveichika.binsniper.logics;
+package luna724.iloveichika.binsniper.utils;
 
-import net.luna724.iloveichika.binsniper.external.ScoreboardUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.scoreboard.Score;
-import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.math.NumberUtils;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static net.luna724.iloveichika.binsniper.utils.Wrapper.mc;
+import static luna724.iloveichika.binsniper.BinSniper.mc;
 
 public class ScoreboardUtil {
     static {
@@ -33,6 +29,7 @@ public class ScoreboardUtil {
     }
 
     public static int getPurse() {
+        // TODO: Piggy: への対応
         Scoreboard scoreboard = Minecraft.getMinecraft().theWorld.getScoreboard();
         List<String> ScoreboardLines = ScoreboardUtils.getSidebarScores(scoreboard);
 

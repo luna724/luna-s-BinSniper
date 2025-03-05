@@ -1,4 +1,4 @@
-package net.luna724.iloveichika.binsniper.external;
+package luna724.iloveichika.binsniper.utils;
 
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;

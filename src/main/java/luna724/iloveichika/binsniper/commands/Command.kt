@@ -3,7 +3,10 @@ package luna724.iloveichika.binsniper.commands
 import luna724.iloveichika.binsniper.BinSniper
 import luna724.iloveichika.binsniper.BinSniper.Companion.ChatLib
 import luna724.iloveichika.binsniper.BinSniper.Companion.configUtil
+import luna724.iloveichika.binsniper.BinSniper.Companion.logic
 import luna724.iloveichika.binsniper.BinSniper.Companion.mc
+import luna724.iloveichika.binsniper.Logic
+import luna724.iloveichika.binsniper.getPlayerId
 import luna724.iloveichika.binsniper.utils.Util
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
@@ -91,8 +94,14 @@ class Command : CommandBase() {
             help()
         }
 
+
+
         if (trigger == "limbo") {
             ChatLib.chat("§4/bs limboは消滅しました。二度と復活しません")
+            return
+        }
+        else if (trigger == "me") {
+            ChatLib.chat("Welcome to Binsniper! Your PlayerId are ${getPlayerId()}")
             return
         }
         else if (trigger == "npe") {
@@ -131,7 +140,7 @@ class Command : CommandBase() {
             return
         }
         else if (trigger == "forcestop") {
-            TODO()
+            logic.stopSnipe()
         }
         else if (trigger == "category") {
             if (args.size < 2) {
@@ -324,7 +333,7 @@ class Command : CommandBase() {
                 "value",
                 "fastmode",
                 "allmode",
-                "togglemode",
+                "swapmode",
                 "mesage",
                 "reconnect",
                 "category",
@@ -339,7 +348,7 @@ class Command : CommandBase() {
                 "binsleep",
                 "limbo",
                 "toggleaam",
-                "legacy_accessory"
+                "back_compatibility"
             )
         }
         return null

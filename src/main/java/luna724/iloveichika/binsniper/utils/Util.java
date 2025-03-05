@@ -29,7 +29,7 @@ public class Util {
 
     public static void init() {
         try {
-            String playerUUID = Wrapper.mc.getSession().getProfile().getId().toString();
+            String playerUUID = mc.getSession().getProfile().getId().toString();
             if (!mainFile.exists()) {
                 mainFile.createNewFile();
             }
@@ -92,7 +92,7 @@ public class Util {
     static {
         mc = Minecraft.getMinecraft();
         mainFile = new File("config/BinSniper.yml");
-        file = new File("config/BinSniper-" + Wrapper.mc.getSession().getProfile().getId().toString() + ".yml");
+        file = new File("config/BinSniper-" + mc.getSession().getProfile().getId().toString() + ".yml");
         oldStr = "";
     }
 

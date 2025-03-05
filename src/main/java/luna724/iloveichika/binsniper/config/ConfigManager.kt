@@ -1,6 +1,5 @@
-package luna724.iloveichika.lunaclient.config
+package luna724.iloveichika.binsniper.config
 
-import com.google.gson.Gson
 import io.github.notenoughupdates.moulconfig.gui.GuiScreenElementWrapper
 import io.github.notenoughupdates.moulconfig.gui.MoulConfigEditor
 import io.github.notenoughupdates.moulconfig.processor.BuiltinMoulConfigGuis
@@ -46,9 +45,10 @@ class ConfigManager {
                 }
             }.nullSafe())
             .enableComplexMapKeySerialization()
+            .create()
     }
 
-    private var configDirectory = File("config/LunaClient")
+    private var configDirectory = File("config/lcbs")
     private var configFile: File
     var config: ModConfig? = null
     private var lastSaveTime = 0L
@@ -58,7 +58,7 @@ class ConfigManager {
 
     init {
         configDirectory.mkdirs()
-        configFile = File(configDirectory, "moulconfig.json")
+        configFile = File(configDirectory, "sniperMain.json")
 
         if (configFile.isFile) {
             println("Trying to load the config")

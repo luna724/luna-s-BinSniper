@@ -19,12 +19,19 @@ group = "luna724.iloveichika.binsniper"
 archivesName = "Luna's BinSniper"
 version = "2.1"
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+}
+
 kotlin {
     sourceSets.all {
         languageSettings {
             languageVersion = "2.0"
             enableLanguageFeature("BreakContinueInInlineLambdas")
         }
+    }
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
     }
 }
 
@@ -109,7 +116,7 @@ tasks.processResources {
             expand(
                 mapOf(
                     "modname" to project.name,
-                    "modid" to "luna724_item_price_fetcher",
+                    "modid" to project.name.lowercase(),
                     "version" to project.version,
                     "mcversion" to "1.8.9"
                 )
@@ -172,8 +179,3 @@ tasks.jar {
 }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)
-
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
