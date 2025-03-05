@@ -104,13 +104,6 @@ class Command : CommandBase() {
             ChatLib.chat("Welcome to Binsniper! Your PlayerId are ${getPlayerId()}")
             return
         }
-        else if (trigger == "npe") {
-            val value = configUtil.toggleConfig("onTickNPECatcher")
-            ChatLib.chat(
-                "§8NPE Catcher§r§f: §9§l${if (value) "ON" else "OFF"}"
-            )
-            return
-        }
         else if (trigger == "toggleaam") {
             val value = configUtil.toggleConfig("antiantimacro")
             ChatLib.chat(
@@ -125,7 +118,7 @@ class Command : CommandBase() {
             )
             return
         }
-        else if (trigger == "binsleep") {
+        else if (trigger == "binsleep" || trigger == "sleepoptimization") {
             val value = configUtil.toggleConfig("sleepOptimization")
             ChatLib.chat(
                 "§dBIN Sleep Optimization§r§f: §9§l${if (value) "ON" else "OFF"}"
