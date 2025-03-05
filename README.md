@@ -1,12 +1,15 @@
+# Luna's BinSniper は Lunaclient v2 への統合により開発停止されました。
+- https://github.com/luna724/LunaClient/tree/v2.0
+
 # B.I.N SNIPER!
 ## この MOD を使用して起こったすべての損害に作者は責任は負いません ## 
-2024年10月29日現在、1垢24時間稼働でのBAN/Wipeなどの事象はおこっていません <br />
-4垢を一つのコープで実行したとき、Wipeされたという事例は報告されています
+当然だよねって感じ
 
 ## luna's BinSniper
 | version | updated |
 | --- | --- |
 | v2.0 (Legacy) | 2024/10/23 |
+| v2.1 (Closed Beta) | 2025/03/?? |
 
 # command
 | cmd | 説明 | desc | 
@@ -27,6 +30,8 @@ AGPLでライセンスされていますが、`Githubでのフォークの作成
 元の機能はほとんど変わりません
 主に機能追加や、新しいHypixelの要素に対応しただけです。
 
+- 2.1からは機能自体は変わりませんがコードが全く異なるものとなりました
+
 ## MODが行うこと
 そのほかこれら要素を Discord WebHook 経由で取得します
 | 取得するもの | できないもの |
@@ -35,10 +40,6 @@ AGPLでライセンスされていますが、`Githubでのフォークの作成
 | 何を買ったか | パソコンの情報 |
 | 何をスナイプし始めたか | プレイヤーが持ってるアイテム |
 | どんなエラーが起こったか | coopのメンバー数 |
-| sessionID | など.. |
-
-<strong>sessionIDは身内内での二次配布防止などに使用していました。この機能は `WebHookUrls.java` 内のURLを変更することで無効化できます </strong>
-このMODは `rat` を行える可能性のあるMODですが、`rat` を目的に作られたものではありません
 
 ## メイン機能
 Hypixel Skyblock BIN オークションのスナイプを行います。
