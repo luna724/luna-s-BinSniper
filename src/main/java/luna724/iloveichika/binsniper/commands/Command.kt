@@ -2,11 +2,13 @@ package luna724.iloveichika.binsniper.commands
 
 import luna724.iloveichika.binsniper.BinSniper
 import luna724.iloveichika.binsniper.BinSniper.Companion.ChatLib
+import luna724.iloveichika.binsniper.BinSniper.Companion.configUtil
 import luna724.iloveichika.binsniper.BinSniper.Companion.mc
-import luna724.iloveichika.binsniper.commands.configUtil.toggleConfig
 import luna724.iloveichika.binsniper.utils.Util
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
+import net.minecraft.util.BlockPos
+import java.text.NumberFormat
 
 class Command : CommandBase() {
     override fun getCommandName(): String {
@@ -30,8 +32,8 @@ class Command : CommandBase() {
         Util.send("§dLuna's BinSni" +
                 "per ("+ BinSniper.VERSION +") by. luna724");
         Util.sendAir();
-        Util.send("§f/bs timeout 10000 * タイムアウトまでの時間 (設定非推奨)");
-        Util.send("§f/bs delay 1000 * 遅延する 時間の指定 (設定非推奨)");
+        Util.send("§f/bs timeout <Timeout:MS:10000> * タイムアウトまでの時間");
+        Util.send("§f/bs delay <Delay:MS:1000> * 遅延する 時間の指定");
         Util.send("§f/bs coin 1m * 購入金額の指定");
         Util.send("§f/bs name Wither Catalyst * アイテムの名前を限定します");
         Util.send("§f/bs fastmode * 一つのページから検索するモード");
@@ -67,9 +69,21 @@ class Command : CommandBase() {
         Util.sendAir();
     }
 
+    fun showCurrentSettings() {
+        val numberInstance = NumberFormat.getNumberInstance()
+        Util.sendAir()
+        Util.send("§7現在の設定一覧:")
+        Util.send("§7- Coin: §6" + numberInstance.format(configUtil.getConfig("Cost")) + "/コイン")
+        Util.send("§7- Category: §6" + configUtil.getConfig("Category") + "/番")
+        Util.send("§7- Amount: §6" + configUtil.getConfig("Amount") + "/個")
+        Util.send("§7- Name: §6" + configUtil.getConfig("Name"))
+        Util.send("§7- Mode: §6" + configUtil.getConfig("Mode"))
+        Util.sendAir()
+    }
+
     override fun processCommand(sender: ICommandSender, args: Array<String>) {
         val playerId: String = mc.session.profile.id.toString()
-        if (args.size == 0) {
+        if (args.isEmpty()) {
             help()
             return
         }
@@ -82,35 +96,35 @@ class Command : CommandBase() {
             return
         }
         else if (trigger == "npe") {
-            val value = toggleConfig("onTickNPECatcher")
+            val value = configUtil.toggleConfig("onTickNPECatcher")
             ChatLib.chat(
                 "§8NPE Catcher§r§f: §9§l${if (value) "ON" else "OFF"}"
             )
             return
         }
         else if (trigger == "toggleaam") {
-            val value = toggleConfig("antiantimacro")
+            val value = configUtil.toggleConfig("antiantimacro")
             ChatLib.chat(
                 "§cAnti-AntiMacro§r§f: §9§l${if (value) "ON" else "OFF"}"
             )
             return
         }
         else if (trigger == "uuidmode") {
-            val value = toggleConfig("uuidMode")
+            val value = configUtil.toggleConfig("uuidMode")
             ChatLib.chat(
                 "§5UUID-Mode§r§f: §9§l${if (value) "ON" else "OFF"}"
             )
             return
         }
         else if (trigger == "binsleep") {
-            val value = toggleConfig("sleepOptimization")
+            val value = configUtil.toggleConfig("sleepOptimization")
             ChatLib.chat(
                 "§dBIN Sleep Optimization§r§f: §9§l${if (value) "ON" else "OFF"}"
             )
             return
         }
         else if (trigger == "reconnect") {
-            val value = toggleConfig("Reconnect")
+            val value = configUtil.toggleConfig("Reconnect")
             ChatLib.chat(
                 "§3Reconnect§r§f: §9§l${if (value) "ON" else "OFF"}"
             )
@@ -129,9 +143,9 @@ class Command : CommandBase() {
                 0
             }
             if (0 <= category && category <= 6) {
-                Util.config().set("$playerId.Category", category)
+                val value = configUtil.setConfig("Category", category)
                 ChatLib.chat(
-                    "§aCategory§r§f: §9§l${category}"
+                    "§aCategory§r§f: §9§l${value}"
                 )
                 return
             }
@@ -142,9 +156,9 @@ class Command : CommandBase() {
             return
         }
         else if (trigger == "message") {
-            val value = toggleConfig("Message")
+            val value = configUtil.toggleConfig("Message")
             ChatLib.chat(
-                "§dInternal Message§r§f: §9§l${if (value) "ON" else "OFF"}"
+                "§dSnipe Count§r§f: §9§l${if (value) "ON" else "OFF"}"
             )
             return
         }
@@ -156,9 +170,178 @@ class Command : CommandBase() {
         }
         else if (trigger == "timeout") {
             if (args.size < 2) {
-                ChatLib.chat("§c/bs timeout <Timeout:MS>")
+                ChatLib.chat("§c/bs timeout <Timeout:MS:Int>")
                 return
             }
+            val timeoutMs = args.getOrNull(1)?.toIntOrNull() ?: run {
+                ChatLib.chat("§c/bs timeout <Timeout:MS:Int>")
+                null
+            }
+            timeoutMs?: return
+            val value = configUtil.setConfig("Timeout", timeoutMs)
+            ChatLib.chat("§2Timeout§r§f: §9§l${value}ms")
+            return
         }
+        else if (trigger == "delay") {
+            if (args.size < 2) {
+                ChatLib.chat("§c/bs delay <Delay:MS>")
+                return
+            }
+            val delay = args.getOrNull(1)?.toIntOrNull() ?: run {
+                ChatLib.chat("§c/bs delay <Delay:MS:Int>")
+                null
+            }
+            delay?: return
+            val value = configUtil.setConfig("Delay", delay)
+            ChatLib.chat("§2Delay§r§f: §9§l${value}ms")
+            return
+        }
+        else if (trigger == "fastmode" || trigger == "allmode" || trigger == "swapmode") {
+            var value: Any? = null
+            if (trigger == "fastmode" || trigger == "allmode") {
+                ChatLib.chat("§c/bs fastmode/allmode は廃止される可能性があります。§d/bs swapmode §cを使用してください")
+                value = configUtil.setConfig("Mode", trigger.toString().uppercase())
+            }
+            else {
+                val currentMode = configUtil.getConfig("Mode")
+                value = configUtil.setConfig(
+                    "Mode", if (currentMode == "FASTMODE") "ALLMODE" else "FASTMODE"
+                )
+            }
+            ChatLib.chat("§bMode§r§f: §9§l$value")
+            return
+        }
+        else if (trigger == "name" || trigger == "item") {
+            if (args.size < 2) {
+                ChatLib.chat("§c/bs name <ItemName>")
+            }
+            var itemName: String = ""
+            itemName = args.toList().subList(1, args.size).joinToString(" ")
+            val value = configUtil.setConfig(
+                "Name", itemName
+            )
+            ChatLib.chat("§bTarget Item§r§f: §9§l$value")
+            ChatLib.chat("§cこの機能が必要ない場合は \"/binsniper None\" と入力して下さい")
+
+            return
+        }
+        else if (trigger == "back_compatibility") {
+            val value = configUtil.toggleConfig("BackCompatibility")
+            ChatLib.chat(
+                "§dBack Compatibility§r§f: §9§l${if (value) "ON" else "OFF"}"
+            )
+            return
+        }
+        else if (trigger == "settings" || trigger == "s") {
+            showCurrentSettings()
+            return
+        }
+        else if (trigger == "save") {
+            if (args.size < 2) {
+                ChatLib.chat("§c/bs save <ConfigName>")
+                return
+            }
+            val presetName: String = args.getOrNull(1) ?: return
+
+            Util.configMain().set("Preset.$presetName.Cost", configUtil.getConfig("Cost"))
+            Util.configMain().set("Preset.$presetName.Category", configUtil.getConfig("Category"))
+            Util.configMain().set("Preset.$presetName.Amount", configUtil.getConfig("Amount"))
+            Util.configMain().set("Preset.$presetName.Mode", configUtil.getConfig("Mode"))
+            Util.configMain().set("Preset.$presetName.Name", configUtil.getConfig("Name"))
+            Util.saveMain()
+
+            Util.sendAir()
+            Util.send("§7現在の設定一覧:")
+            showCurrentSettings()
+            Util.sendAir()
+            Util.send("§a現在の設定をプリセットの §6§l$presetName§r§a に保存しました")
+            return
+        }
+        else if (trigger == "load") {
+            if (args.size < 2) {
+                ChatLib.chat("§c/bs load <ConfigName>")
+                return
+            }
+            val presetName: String = args.getOrNull(1) ?: return
+
+            val settingCost = Util.configMain().getInt("Preset.$presetName.Cost")
+            val settingCategory = Util.configMain().getInt("Preset.$presetName.Category") //edited
+            val settingAmount = Util.configMain().getInt("Preset.$presetName.Amount")
+            val settingMode = Util.configMain().getString("Preset.$presetName.Mode")
+            val settingName = Util.configMain().getString("Preset.$presetName.Name")
+            configUtil.setConfig("Cost", settingCost)
+            configUtil.setConfig("Category", settingCategory)
+            configUtil.setConfig("Amount", settingAmount)
+            configUtil.setConfig("Mode", settingMode)
+            configUtil.setConfig("Name", settingName)
+
+            Util.sendAir()
+            Util.send("§7ロードした設定一覧:")
+            showCurrentSettings()
+            Util.send("§aプリセットの §6§l$presetName§r§a をロードしました")
+        }
+        else if (trigger == "delete") {
+            if (args.size < 2) {
+                ChatLib.chat("§c/bs delete <ConfigName>")
+                return
+            }
+            val presetName: String = args.getOrNull(1) ?: return
+
+            if (!Util.configMain().contains("Preset.$presetName")) {
+                Util.send("§c入力したプリセットは存在しません")
+                return
+            }
+            Util.configMain().set("Preset.$presetName", null)
+            Util.saveMain()
+            Util.send("§aプリセットの §6§l$presetName§r§a を削除しました")
+            return
+        }
+        else if (trigger == "list") {
+            val presetList = Util.configMain().getSection("Preset").keys
+            for (presetName in presetList) {
+                Util.send("§7- $presetName")
+            }
+            Util.send("§aプリセット一覧")
+            return
+        }
+        else {
+            help()
+        }
+    }
+
+    override fun addTabCompletionOptions(
+        sender: ICommandSender,
+        args: Array<out String>,
+        pos: BlockPos
+    ): List<String>? {
+        if (args.size == 1) {
+            // 第一引数の補完を提供
+            return getListOfStringsMatchingLastWord(
+                args,
+                "timeout",
+                "delay",
+                "coin",
+                "value",
+                "fastmode",
+                "allmode",
+                "togglemode",
+                "mesage",
+                "reconnect",
+                "category",
+                "save",
+                "load",
+                "delete",
+                "list",
+                "s",
+                "settings",
+                "forcestop",
+                "uuidmode",
+                "binsleep",
+                "limbo",
+                "toggleaam",
+                "legacy_accessory"
+            )
+        }
+        return null
     }
 }

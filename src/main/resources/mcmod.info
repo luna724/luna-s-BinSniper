@@ -1,6 +1,6 @@
 [
 {
-  "modid": "lunas_binsniper",
+  "modid": "luna724_item_price_fetcher",
   "name": "Luna's BinSniper",
   "description": "BinSniper presents by. luna724 & NotTomochie",
   "version": "${version}",
@@ -11,6 +11,6 @@
   "credits": "by luna724. baseMod presents by. @NotTomochie",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": []
+  "dependencies": ["skytils"]
 }
 ]

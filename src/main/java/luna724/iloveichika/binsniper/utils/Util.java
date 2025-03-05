@@ -62,7 +62,7 @@ public class Util {
             if (!(config.contains(playerUUID + ".Timeout"))) {
                 config.set(playerUUID + ".Timeout", 10000);
             }
-            if (!(config.contains(playerUUID + "None"))) {
+            if (!(config.contains(playerUUID + ".Message"))) {
                 config.set(playerUUID + ".Message", true);
             }
             if (!(config.contains(playerUUID + ".uuidMode"))) {
@@ -76,6 +76,9 @@ public class Util {
             }
             if (!(config.contains(playerUUID + ".onTickNPECatcher"))) {
                 config.set(playerUUID + ".onTickNPECatcher", true);
+            }
+            if (!(config.contains(playerUUID + ".BackCompatibility"))) {
+                config.set(playerUUID + ".BackCompatibility", false);
             }
             config.set(playerUUID + ".Active", false);
             Util.save();

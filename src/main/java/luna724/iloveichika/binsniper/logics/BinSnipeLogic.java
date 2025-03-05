@@ -82,144 +82,9 @@ public class BinSnipeLogic {
         this.lastseller = "None";
         this.isWorldChanged = false;
         this.isError = false;
-        String[] reforgeStrings = new String[85];
-        reforgeStrings[0] = "Gentle";
-        reforgeStrings[1] = "Odd";
-        reforgeStrings[2] = "Fast";
-        reforgeStrings[3] = "Fair";
-        reforgeStrings[4] = "Epic";
-        reforgeStrings[5] = "Sharp";
-        reforgeStrings[6] = "Heroic";
-        reforgeStrings[7] = "Spicy";
-        reforgeStrings[8] = "Legendary";
-        reforgeStrings[9] = "Dirty";
-        reforgeStrings[10] = "Fabled";
-        reforgeStrings[11] = "Suspicious";
-        reforgeStrings[12] = "Gilded";
-        reforgeStrings[13] = "Warped";
-        reforgeStrings[14] = "Withered";
-        reforgeStrings[15] = "Salty";
-        reforgeStrings[16] = "Treacherous";
-        reforgeStrings[17] = "Stiff";
-        reforgeStrings[18] = "Lucky";
-        reforgeStrings[19] = "Deadly";
-        reforgeStrings[20] = "Fine";
-        reforgeStrings[21] = "Grand";
-        reforgeStrings[22] = "Hasty";
-        reforgeStrings[23] = "Neat";
-        reforgeStrings[24] = "Rapid";
-        reforgeStrings[25] = "Unreal";
-        reforgeStrings[26] = "Awkward";
-        reforgeStrings[27] = "Rich";
-        reforgeStrings[28] = "Precise";
-        reforgeStrings[29] = "Spiritual";
-        reforgeStrings[30] = "Headstrong";
-        reforgeStrings[31] = "Clean";
-        reforgeStrings[32] = "Fierce";
-        reforgeStrings[33] = "Heavy";
-        reforgeStrings[34] = "Light";
-        reforgeStrings[35] = "Mythic";
-        reforgeStrings[36] = "Pure";
-        reforgeStrings[37] = "Smart";
-        reforgeStrings[38] = "Titanic";
-        reforgeStrings[39] = "Wise";
-        reforgeStrings[40] = "Perfect";
-        reforgeStrings[41] = "Necrotic";
-        reforgeStrings[42] = "Ancient";
-        reforgeStrings[43] = "Spiked";
-        reforgeStrings[44] = "Renowned";
-        reforgeStrings[45] = "Cubic";
-        reforgeStrings[46] = "Warped";
-        reforgeStrings[47] = "Reinforced";
-        reforgeStrings[48] = "Loving";
-        reforgeStrings[49] = "Ridiculous";
-        reforgeStrings[50] = "Giant";
-        reforgeStrings[51] = "Submerged";
-        reforgeStrings[52] = "Bizarre";
-        reforgeStrings[53] = "Itchy";
-        reforgeStrings[54] = "Ominous";
-        reforgeStrings[55] = "Pleasant";
-        reforgeStrings[56] = "Pretty";
-        reforgeStrings[57] = "Shiny";
-        reforgeStrings[58] = "Simple";
-        reforgeStrings[59] = "Strange";
-        reforgeStrings[60] = "Vivid";
-        reforgeStrings[61] = "Godly";
-        reforgeStrings[62] = "Demonic";
-        reforgeStrings[63] = "Forceful";
-        reforgeStrings[64] = "Hurtful";
-        reforgeStrings[65] = "Keen";
-        reforgeStrings[66] = "Strong";
-        reforgeStrings[67] = "Superior";
-        reforgeStrings[68] = "Unpleasant";
-        reforgeStrings[69] = "Zealous";
-        reforgeStrings[70] = "Silky";
-        reforgeStrings[71] = "Bloody";
-        reforgeStrings[72] = "Shaded";
-        reforgeStrings[73] = "Sweet";
-        reforgeStrings[74] = "Fruitful";
-        reforgeStrings[75] = "Magnetic";
-        reforgeStrings[76] = "Refined";
-        reforgeStrings[77] = "Blessed";
-        reforgeStrings[78] = "Moil";
-        reforgeStrings[79] = "Toil";
-        reforgeStrings[80] = "Fleet";
-        reforgeStrings[81] = "Stellar";
-        reforgeStrings[82] = "Mithraic";
-        reforgeStrings[83] = "Auspicious";
-        reforgeStrings[84] = "Testing";
-        this.reforges = reforgeStrings;
+        String[] r = ["Gentle", "Odd", "Fast", "Fair", "Epic", "Sharp", "Heroic", "Spicy", "Legendary", "Dirty", "Fabled", "Suspicious", "Gilded", "Warped", "Withered", "Salty", "Treacherous", "Stiff", "Lucky", "Deadly", "Fine", "Grand", "Hasty", "Neat", "Rapid", "Unreal", "Awkward", "Rich", "Precise", "Spiritual", "Headstrong", "Clean", "Fierce", "Heavy", "Light", "Mythic", "Pure", "Smart", "Titanic", "Wise", "Perfect", "Necrotic", "Ancient", "Spiked", "Renowned", "Cubic", "Warped", "Reinforced", "Loving", "Ridiculous", "Giant", "Submerged", "Bizarre", "Itchy", "Ominous", "Pleasant", "Pretty", "Shiny", "Simple", "Strange", "Vivid", "Godly", "Demonic", "Forceful", "Hurtful", "Keen", "Strong", "Superior", "Unpleasant", "Zealous", "Silky", "Bloody", "Shaded", "Sweet", "Fruitful", "Magnetic", "Refined", "Blessed", "Moil", "Toil", "Fleet", "Stellar", "Mithraic", "Auspicious", "Testing"];
+        this.reforges = r;
     }
-
-    private void clickSlot(int windowSlot1, int windowSlot2) {
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-
-        System.out.println("Tring to Click..");
-        System.out.println("Window ID: " + player.openContainer.windowId);
-        System.out.println("Slot 1: " + windowSlot1 + ", Slot 2: " + windowSlot2);
-        Minecraft.getMinecraft().playerController.windowClick(player.openContainer.windowId, windowSlot1, windowSlot2, 0, player);
-    }
-
-    public static String formatCoin(double value) {
-        boolean isNegative = false;
-
-        // 負の数の場合はフラグを立てて、正の数に変換する
-        if (value < 0) {
-            isNegative = true;
-            value *= -1;
-        }
-
-        // 大きい順に変換: B, M, K
-        double billion = value / 1_000_000_000;
-        double million = value / 1_000_000;
-        double thousand = value / 1_000;
-
-        String result = "";
-
-        if (billion >= 1) {
-            result = String.format("%.2fB", billion);
-        } else if (million >= 1) {
-            result = String.format("%.2fM", million);
-        } else if (thousand >= 1) {
-            result = String.format("%.2fk", thousand);
-        } else {
-            result = String.format("%.0f", value); // 小さな数値はそのまま
-        }
-
-        // 負の数の場合、結果に "-" を付ける
-        if (isNegative) {
-            result = "-" + result;
-        }
-
-        // 小数点以下が0なら省略する
-        if (result.endsWith(".0B") || result.endsWith(".0M") || result.endsWith(".0k")) {
-            result = result.substring(0, result.length() - 2);
-        }
-
-        return result;
-    }
-
-
     @SubscribeEvent
     public void onKey(GuiScreenEvent.KeyboardInputEvent event) {
         String playerId = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
@@ -384,53 +249,6 @@ public class BinSnipeLogic {
         }
     }
 
-    private int getCost(ItemStack itemStack) {
-        String playerId = Minecraft.getMinecraft().getSession().getProfile().getId().toString();
-        if (!Util.config().getBoolean(playerId + ".Active")) {
-            return -1;
-        }
-        if (!(Wrapper.mc.currentScreen instanceof GuiChest)) {
-            return -1;
-        }
-        if (!(Wrapper.mc.thePlayer.openContainer instanceof ContainerChest)) {
-            return -1;
-        }
-        if (itemStack == null) {
-            return -1;
-        }
-        if (!Util.config().getString(playerId + ".Name").equalsIgnoreCase("None")) {
-            String targetItemName = EnumChatFormatting.getTextWithoutFormattingCodes((String)itemStack.getDisplayName());
-            if (!targetItemName.equalsIgnoreCase(Util.config().getString(playerId + ".Name"))) {
-                return -1;
-            }
-        }
-
-        NBTTagList LoreLists = itemStack.getTagCompound().getCompoundTag("display").getTagList("Lore", 8);
-        int i = 0;
-        while (i < LoreLists.tagCount()) {
-            String lore = LoreLists.getStringTagAt(i);
-            if (lore.startsWith("§7Status: §aSold!")) {
-                // もう売れてるならパス
-                return -1;
-            }
-            if (lore.startsWith("§7Buy it now: ")) {
-                // Buy it now: n coins を n にリサイズし、それらが数字のみでできてる場合、その価格を返す
-                lore = lore.replace("§7Buy it now: §6", "");
-                lore = lore.replace(" coins", "");
-                if (!NumberUtils.isDigits(lore = lore.replace(",", ""))) {
-                    return -1;
-                }
-                int Price = Integer.parseInt(lore);
-                if (itemStack.stackSize != 1) {
-                    Price /= itemStack.stackSize;
-                }
-                return Price;
-            }
-            ++i;
-        }
-        return -1;
-    }
-
     private boolean isBinOnly(ContainerChest containerChest) {
         String playerId = Wrapper.mc.getSession().getProfile().getId().toString();
         if (!Util.config().getBoolean(playerId + ".Active")) {
@@ -526,33 +344,6 @@ public class BinSnipeLogic {
             return true;
         }
         return false;
-    }
-
-    private String getLastSeller(ItemStack itemStack) {
-        String playerId = Wrapper.mc.getSession().getProfile().getId().toString();
-        if (!(Util.config().getBoolean(playerId + ".Active"))) {
-            return "None";
-        }
-        if (!(Wrapper.mc.currentScreen instanceof GuiChest)) {
-            return "None";
-        }
-        if (!(Wrapper.mc.thePlayer.openContainer instanceof ContainerChest)) {
-            return "None";
-        }
-        if (itemStack == null) {
-            return "None";
-        }
-        NBTTagList LoreList = itemStack.getTagCompound().getCompoundTag("display").getTagList("Lore", 8);
-        int i = 0;
-        while (i < LoreList.tagCount()) {
-            String lore = LoreList.getStringTagAt(i);
-            if (lore.startsWith("§7Seller: ")) {
-                lore = lore.replace("§7Seller: ", "");
-                return EnumChatFormatting.getTextWithoutFormattingCodes((String)lore);
-            }
-            ++i;
-        }
-        return "None";
     }
 
     @SubscribeEvent
@@ -665,90 +456,11 @@ public class BinSnipeLogic {
         return false;
     }
 
-
-    private void stopSnipe() {
-        String playerId = Wrapper.mc.getSession().getProfile().getId().toString();
-        Util.config().set(playerId + ".Active", false);
-        Util.save();
-        Util.send("§c動作の停止");
-    }
-
-    private boolean isAuctionBrowser(ContainerChest containerChest) {
-        if (!(Wrapper.mc.currentScreen instanceof GuiChest)) {
-            return false;
-        }
-        if (!(Wrapper.mc.thePlayer.openContainer instanceof ContainerChest)) {
-            return false;
-        }
-
-        int[] ints = new int[]{0, 9, 18, 27, 36, 45};
-        int i = 0;
-        while (i < 6) {
-            int ii = ints[i];
-            ItemStack itemStack = containerChest.getSlot(ii).getStack();
-            if (itemStack == null) {
-                return false;
-            }
-            if (ii == 0 && !itemStack.getDisplayName().equalsIgnoreCase("§6Weapons")) {
-                return false;
-            }
-            if (ii == 9 && !itemStack.getDisplayName().equalsIgnoreCase("§bArmor")) {
-                return false;
-            }
-            if (ii == 18 && !itemStack.getDisplayName().equalsIgnoreCase("§2Accessories")) {
-                return false;
-            }
-            if (ii == 27 && !itemStack.getDisplayName().equalsIgnoreCase("§cConsumables")) {
-                return false;
-            }
-            if (ii == 36 && !itemStack.getDisplayName().equalsIgnoreCase("§eBlocks")) {
-                return false;
-            }
-            if (ii == 45 && !itemStack.getDisplayName().equalsIgnoreCase("§dTools & Misc")) {
-                return false;
-            }
-            ++i;
-        }
-        return true;
-    }
-
-    private void registerUUID(String newUUID) {
-        int MAX_ALLOWED_UUID_SIZE = 10;
-        if (this.uuidHistory.size() >= MAX_ALLOWED_UUID_SIZE) {
-            this.uuidHistory.remove(0);
-        }
-        this.uuidHistory.add(newUUID);
-    }
-
-    private boolean checkUUID(String compareUUID) {
-        return this.uuidHistory.contains(compareUUID);
-    }
-
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent clientTickEvent) {
         String playerId = Wrapper.mc.getSession().getProfile().getId().toString();
-        if (!Util.config().getBoolean(playerId + ".Active")) {
-            return;
-        }
 
         try {
-            if (this.timer - System.currentTimeMillis() < -Util.config().getLong(playerId + ".Timeout")) {
-                Wrapper.mc.thePlayer.inventory.openInventory(Wrapper.mc.thePlayer);
-                if (!Util.config().getBoolean(playerId + ".Reconnect")) {
-                    this.stopSnipe();
-                    return;
-                }
-                this.currentStep = 4;
-                Wrapper.mc.thePlayer.sendChatMessage("/ah");
-                this.timer = System.currentTimeMillis();
-                if (Util.config().getBoolean(playerId + ".Message")) {
-                    Util.send("修正中... (動作のタイムアウト オークションの復帰を試みます)");
-                }
-                return;
-            }
-            if (this.timer - System.currentTimeMillis() > -Util.config().getLong(playerId + ".Delay")) {
-                return;
-            }
             if (this.currentStep == -1) {
                 Wrapper.mc.thePlayer.sendChatMessage("/ah");
                 this.currentStep = -2;
@@ -899,31 +611,6 @@ public class BinSnipeLogic {
                 }
                 return;
             }
-            if (!(Wrapper.mc.currentScreen instanceof GuiChest)) {
-                if (this.isWorldChanged) {
-                    this.isWorldChanged = false;
-                    this.currentStep = 12345;
-                    this.timer = System.currentTimeMillis() + 5000L;
-                    return;
-                }
-                if (this.currentStep == 12345) {
-                    Wrapper.mc.thePlayer.sendChatMessage("/is");
-                    this.currentStep = 3;
-                    this.timer = System.currentTimeMillis() + 5000L;
-                    return;
-                }
-                if (this.currentStep == 3) {
-                    // 基礎スタート /ah と打つ
-                    if (!(Util.config().getBoolean(playerId + ".Reconnect"))) {
-                        this.stopSnipe();
-                        return;
-                    }
-                    this.currentStep = 4;
-                    Wrapper.mc.thePlayer.sendChatMessage("/ah");
-                    this.timer = System.currentTimeMillis();
-                    return;
-                }
-            }
             if (Util.config().getInt(playerId + ".Cost") == -1) {
                 Util.config().set(playerId + ".Active", false);
                 Util.save();
@@ -935,42 +622,7 @@ public class BinSnipeLogic {
                 return;
             }
             ContainerChest openContainer = (ContainerChest) Wrapper.mc.thePlayer.openContainer;
-            if (this.currentStep == 4) {
-                // i11 をクリック (Auction Browser を開く)
-                this.clickSlot(11, 0);
-                this.currentStep = 5;
-                this.timer = System.currentTimeMillis();
-                return;
-            }
-            if (this.currentStep == 5) {
-                // それが AuctionBrowser かどうかを確認する
-                if (this.isAuctionBrowser(openContainer)) {
-                    this.currentStep = 6;
-                    this.timer = System.currentTimeMillis();
-                    return;
-                }
-                return;
-            }
-            if (this.currentStep == 6) {
-                // currentStep 6: カテゴリの移動
-                int categoryType = Util.config().getInt(playerId + ".Category");
-                if (categoryType == 1) {
-                    this.clickSlot(0, 0); // Weapons
-                } else if (categoryType == 2) {
-                    this.clickSlot(9, 0); // Armors
-                } else if (categoryType == 3) {
-                    this.clickSlot(18, 0); // Accessories
-                } else if (categoryType == 4) {
-                    this.clickSlot(27, 0); // Consumables
-                } else if (categoryType == 5) {
-                    this.clickSlot(36, 0); // Blocks
-                } else if (categoryType == 6) {
-                    this.clickSlot(45, 0); // Tools & Misc
-                }
-                this.currentStep = 0;
-                this.timer = System.currentTimeMillis();
-                return;
-            }
+
             if (this.currentStep == 2) {
                 Slot slot = openContainer.getSlot(11);
                 if (slot == null) {
@@ -1076,9 +728,6 @@ public class BinSnipeLogic {
             if (this.currentStep != 0) {
                 return;
             }
-            if (!this.isAuctionBrowser(openContainer)) {
-                return;
-            }
             // おそらく 0
             //
             int clickTarget1 = 11;
@@ -1162,25 +811,5 @@ public class BinSnipeLogic {
             stopSnipe();
             return;
         }
-    }
-
-    @SubscribeEvent
-    public void onWorldChange(WorldEvent.Unload worldEvent) {
-        if (Wrapper.mc.isGamePaused()) {
-            return;
-        }
-        String playerId = Wrapper.mc.getSession().getProfile().getId().toString();
-        if (!Util.config().getBoolean(playerId + ".Active")) {
-            return;
-        }
-        if (!Util.config().getBoolean(playerId + ".Reconnect")) {
-            this.stopSnipe();
-            return;
-        }
-        this.isWorldChanged = true;
-    }
-
-    static {
-        BinSnipeLogic binSnipeLogic;
     }
 }

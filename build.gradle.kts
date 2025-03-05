@@ -96,6 +96,7 @@ dependencies {
     }
 
     shadowModImpl("org.notenoughupdates.moulconfig:legacy:3.0.0-beta.7")
+    implementation(files("libs/Skytils.jar"))
 }
 
 tasks.compileJava {
@@ -108,7 +109,7 @@ tasks.processResources {
             expand(
                 mapOf(
                     "modname" to project.name,
-                    "modid" to project.name.lowercase(Locale.getDefault()),
+                    "modid" to "luna724_item_price_fetcher",
                     "version" to project.version,
                     "mcversion" to "1.8.9"
                 )
