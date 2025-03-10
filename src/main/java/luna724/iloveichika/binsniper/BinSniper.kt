@@ -1,11 +1,9 @@
 package luna724.iloveichika.binsniper
 
-import luna724.iloveichika.binsniper.commands.Command
-import luna724.iloveichika.binsniper.commands.ConfigUtil
+import luna724.iloveichika.binsniper.Command
 import luna724.iloveichika.binsniper.config.Config
 import luna724.iloveichika.binsniper.config.ConfigManager
 import luna724.iloveichika.binsniper.utils.Analytics
-import luna724.iloveichika.binsniper.utils.Util
 import luna724.iloveichika.binsniper.utils._ChatLib
 import net.minecraft.client.Minecraft
 import net.minecraft.client.settings.KeyBinding
@@ -25,9 +23,8 @@ import org.apache.logging.log4j.Logger;
 class BinSniper {
     @Mod.EventHandler
     fun preInit(event: FMLPreInitializationEvent) {
-        configManager = ConfigManager()
-        configUtil = ConfigUtil()
         ChatLib = _ChatLib()
+        configManager = ConfigManager()
         config = Config()
     }
 
@@ -37,7 +34,6 @@ class BinSniper {
         ClientRegistry.registerKeyBinding(keyBinSniper)
 
         logic = Logic()
-        Util()
         ClientCommandHandler.instance.registerCommand(Command())
         MinecraftForge.EVENT_BUS.register(BinSniper())
         MinecraftForge.EVENT_BUS.register(logic)
@@ -67,13 +63,10 @@ class BinSniper {
         const val HEADER: String = "§7[§dB§bi§9nSni§ap§ee§cr§7]§f:§r "
 
         lateinit var keyBinSniper: KeyBinding
-        lateinit var configManager: ConfigManager
         lateinit var ChatLib: _ChatLib
-
-        @Deprecated("いったん全部置き換えて")
-        lateinit var configUtil: ConfigUtil
         lateinit var config: Config
         lateinit var logic: Logic
+        lateinit var configManager: ConfigManager
 
         @JvmField
         @NotNull

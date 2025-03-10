@@ -54,6 +54,7 @@ repositories {
     mavenCentral()
     maven("https://repo.spongepowered.org/maven/")
     maven("https://repo.sk1er.club/repository/maven-public")
+    maven("https://repo.essential.gg/repository/maven-public")
 
     // If you don't want to log in with your real minecraft account, remove this line
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
@@ -87,6 +88,7 @@ dependencies {
     shadowImpl("com.fasterxml.jackson.core:jackson-databind:2.8.11")
     shadowImpl("net.md-5:bungeecord-config:1.14-SNAPSHOT")
     shadowImpl("org.json:json:20230227")
+    shadowImpl("gg.essential:elementa:695")
 
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")

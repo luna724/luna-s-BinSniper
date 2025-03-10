@@ -24,8 +24,7 @@ public class ScoreboardUtil {
             return null;
         }
         // 数を取得
-        List<String> sidebarItems = ScoreboardUtils.getSidebarScores(scoreboard);
-        return sidebarItems;
+        return ScoreboardUtils.getSidebarScores(scoreboard);
     }
 
     public static int getPurse() {
@@ -58,13 +57,5 @@ public class ScoreboardUtil {
             }
         }
         return -1;
-    }
-
-    public static void debugScoreboardLines() {
-        List<String> lines = getScoreboardLines();
-
-        // スコアボードの行をすべて表示
-//        for (String line : lines) {
-//            System.out.println("Scoreboard Line: " + line);
     }
 }

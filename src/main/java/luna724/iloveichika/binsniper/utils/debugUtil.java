@@ -1,7 +1,4 @@
-package luna724.iloveichika.binsniper.logics;
-
-import luna724.iloveichika.binsniper.utils.Analytics;
-import net.minecraft.util.ChatComponentText;
+package luna724.iloveichika.binsniper.utils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -32,26 +29,6 @@ public class debugUtil {
                 } catch (Exception e) {
                     e.printStackTrace();
                     ChatLib.chat("§4エラーの自動送信時にエラーが発生しました。 (at debugUtil:autoErrorReportingService())");
-                }
-            }
-        }).start();
-    }
-
-    public static void sendMessageToDiscord(String message, String URL) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String username = mc.getSession().getUsername();
-                    String jsonObj = Analytics.setJsonObj(
-                            message, username, null
-                    );
-                    Analytics.requestWeb(
-                            jsonObj, URL
-                    );
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    ChatLib.chat("§4メッセージの送信中にエラーが発生しました。");
                 }
             }
         }).start();

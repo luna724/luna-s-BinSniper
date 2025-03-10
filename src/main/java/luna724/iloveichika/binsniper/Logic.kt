@@ -3,16 +3,14 @@ package luna724.iloveichika.binsniper
 import gg.skytils.skytilsmod.utils.ItemUtil
 import luna724.iloveichika.binsniper.BinSniper.Companion.ChatLib
 import luna724.iloveichika.binsniper.BinSniper.Companion.config
-import luna724.iloveichika.binsniper.BinSniper.Companion.configUtil
 import luna724.iloveichika.binsniper.BinSniper.Companion.keyBinSniper
 import luna724.iloveichika.binsniper.BinSniper.Companion.logger
 import luna724.iloveichika.binsniper.BinSniper.Companion.mc
 import luna724.iloveichika.binsniper.config.SessionConfig
-import luna724.iloveichika.binsniper.logics.debugUtil.autoErrorReportingService
+import luna724.iloveichika.binsniper.utils.debugUtil.autoErrorReportingService
 import luna724.iloveichika.binsniper.utils.Analytics
 import luna724.iloveichika.binsniper.utils.ItemChecker
 import luna724.iloveichika.binsniper.utils.ScoreboardUtil.getPurse
-import luna724.iloveichika.binsniper.utils.Util
 import net.minecraft.inventory.ContainerChest
 import net.minecraft.inventory.Slot
 import net.minecraft.item.Item
@@ -35,26 +33,26 @@ class Logic {
 
         var reforges: MutableList<String> = mutableListOf()
         val accessoryReforges: List<String> = itemChecker.getAccessoryReforges()
+
+        // TODO 設定できるようにしろって値
+        private val worldMovingCooldown: Long = 5000L // TODO 5000L を設定できるように
+        private val maxUUIDCacheSize: Int = 40
+
+        private var userConfig: SessionConfig = SessionConfig()
+        // すでに購入した UUID を管理するセット
+        private var sessionUUID: MutableList<String> = mutableListOf()
+        private var lastTime: Long = 0L
+        private var lastSeller: String = ""
+        private var sessionBuyed: Int = 0
+        private var sessionStartAt: Int = 0
+        private var sessionCheckCount: Int = 0
+        private var isWorldChanged: Boolean = false
+
+        // StackOverflowError を回避するため onTick から Logic を呼び出すための変数
+        private var currentStep: Int = 0
+        private var isError: Boolean = false
     }
 
-    // TODO 設定できるようにしろって値
-    private val worldMovingCooldown: Long = 5000L // TODO 5000L を設定できるように
-    private val maxUUIDCacheSize: Int = 40
-
-    private var userConfig: SessionConfig = SessionConfig()
-    // すでに購入した UUID を管理するセット
-    private var sessionUUID: MutableList<String> = mutableListOf()
-    private var lastTime: Long = 0L
-    private var lastSeller: String = ""
-    private var sessionBuyed: Int = 0
-    private var sessionStartAt: Int = 0
-    private var sessionCheckCount: Int = 0
-    private var isWorldChanged: Boolean = false
-
-    // StackOverflowError を回避するため onTick から Logic を呼び出すための変数
-    private var runLogic: Boolean = true
-    private var currentStep: Int = 0
-    private var isError: Boolean = false
 
     /**
      * セッションを初期化する
@@ -71,7 +69,7 @@ class Logic {
         sessionUUID.clear()
         reforges = itemChecker.getPlainReforges().toMutableList()
 
-        if (configUtil.getBooleanConfig("BackCompatibility")) {
+        if (userConfig.BackCompatibility) {
             reforges.addAll(accessoryReforges)
         }
 
@@ -83,18 +81,26 @@ class Logic {
     private fun isBuyedUUID(targetUUID: String): Boolean = sessionUUID.contains(targetUUID)
 
     /** */
-    fun stopSnipe() {
-        val playerId = getPlayerId()
-        configUtil.setConfig("Active", false)
-        ChatLib.chat("§c動作の停止")
+    fun stopSnipe(reason: String = "不明") {
+        userConfig.Active = false
+        config.savePlayer(userConfig)
+        ChatLib.chat("§c動作の停止 (${reason})")
         return
     }
 
     /** */
-    fun startSnipe() {
-        configUtil.setConfig("Active", true)
-        ChatLib.chat("§a動作の開始")
+    fun startSnipe(reason: String = "") {
         resetSession()
+        // コストのチェック
+        if (userConfig.Cost == -1) {
+            ChatLib.chat("§c金額を /binsniper coin 10000 などで設定して下さい")
+            stopSnipe("コストが -1")
+            return
+        }
+
+        userConfig.Active = true
+        config.savePlayer(userConfig)
+        ChatLib.chat("§a動作の開始 (${reason})")
         return
     }
 
@@ -104,12 +110,26 @@ class Logic {
             ChatLib.chat(msg)
         }
     }
+    private fun sendDebug(msg: String, currentStep: Int? = null) {
+        if (userConfig.Debug) {
+            ChatLib.chat("§f[§6Debug§f]: §r$msg ${if (currentStep != null) "§6(Step: ${currentStep})" else ""}")
+        }
+        println("$msg (step: $currentStep)")
+    }
+
+    /** 受け取った値をそのまま返すだけ */
+    private fun swapStep(new: Int): Int {
+        val old = currentStep
+
+        sendDebug("§7ステップの変更.. (§6$old §r-> §6$new§r)")
+        return new
+    }
 
     /** 指定されたスロットをクリックする */
     private fun clickSlot(windowSlot1: Int, windowSlot2: Int) {
         val player = mc.thePlayer
         mc.playerController.windowClick(
-            player.openContainer.windowId, windowSlot1, windowSlot2, 0, player
+            player.openContainer.windowId, windowSlot1, windowSlot2, 3, player
         )
     }
 
@@ -207,7 +227,7 @@ class Logic {
             return
         }
 
-        sendMessage("検索中.. (${sessionCheckCount}回目のチェック) (購入確定: ${sessionBuyed})")
+        // sendMessage("検索中.. (${sessionCheckCount}回目のチェック) (購入確定: ${sessionBuyed})")
 
         if (snipeMode.equals("ALLMODE", ignoreCase = true)) {
             // ALLMODE: 多分更新しない
@@ -237,9 +257,24 @@ class Logic {
         }
     }
 
+    /**  */
+    fun showCurrentSettings(userConfig: SessionConfig) {
+        ChatLib.chat(" ")
+        ChatLib.chat("§7現在の設定一覧:")
+        ChatLib.chat("§7- Coin: §6 ${formatCoinToString(userConfig.Cost.toDouble())} コイン")
+        ChatLib.chat("§7- Category: §6 ${userConfig.Category} 番")
+        ChatLib.chat("§7- Amount: §6 ${userConfig.Amount} 個")
+        ChatLib.chat("§7- Name: §6 ${userConfig.Name}")
+        ChatLib.chat("§7- Mode: §6 ${userConfig.Mode}")
+        ChatLib.chat(" ")
+    }
+
     /** Step: 0 */
     private fun mainLogic() {
-        if (!isAuctionBrowserOpened()) return
+        if (!isAuctionBrowserOpened()) {
+            sendDebug("mainLogic: isAuctionBrowserOpenedがFalseです")
+            return
+        }
         val openContainer: ContainerChest = getContainerChest()
 
         // AH の 4x6 スロットを繰り返す
@@ -260,8 +295,9 @@ class Logic {
                 // antiantimacro
                 if (userConfig.AntiAntiMacro) {
                     if (Item.getIdFromItem(itemStack.item) == 166) {
+                        sendDebug("mainLogic: ItemID 166 が販売されています 購入対象がバリアブロックの場合は AntiAntiMacro を無効化してください")
                         ChatLib.command("limbo")
-                        stopSnipe()
+                        stopSnipe("AntiAntiMacro バリアブロックチェック")
                         return
                     }
                 }
@@ -279,7 +315,7 @@ class Logic {
                             val itemUUID = extraAttr.getString("uuid")
                             if (isBuyedUUID(itemUUID)) {
                                 // UUIDの重複
-                                ChatLib.chat("§6[Debug]: itemUUID: $itemUUID")
+                                sendDebug("§6mainLogic: itemUUIDの重複 ($itemUUID)")
                                 ChatLib.chat("§c購入のスキップ.. (購入済みのUUID)")
                             }
                             else {
@@ -289,7 +325,8 @@ class Logic {
                                 clickSlot(slotIndex, 0)
                                 lastTime = System.currentTimeMillis()
 
-                                currentStep = 1
+                                sendDebug("mainLogic: 購入対象のアイテムが見つかりました (seller: $lastSeller | UUID: $itemUUID)")
+                                currentStep = swapStep(1)
                                 return
                             }
                         }
@@ -315,15 +352,17 @@ class Logic {
         if (itemId == 371) {
             clickSlot(31, 0)
             lastTime = System.currentTimeMillis()
+            sendDebug("tryToBuyItem: アイテムの購入を決定しています..")
 
-            currentStep = 2
+            currentStep = swapStep(2)
             return
         }
 
         // ベッドの場合
         else if (itemId == 355) {
             if (userConfig.SleepOptimization) {
-                // TODO
+                sendDebug("tryToBuyItem: SleepOptimizationは現在実装されていません この機能を無効化してください")
+                // TODO()
             }
             else { // Optimization がオフなら戻って購入しようとした履歴を消す
                 clickSlot(49, 0)
@@ -331,8 +370,9 @@ class Logic {
                 sessionUUID.removeAt(sessionUUID.size - 1)
                 lastTime = System.currentTimeMillis()
                 sendMessage("§c購入のキャンセル (アイテムがまだ購入可能でありません)")
+                sendDebug("tryToBuyItem: SleepOptimizationがオフです アイテムを再度処理します")
 
-                currentStep = 0
+                currentStep = swapStep(0)
                 return
             }
         }
@@ -353,25 +393,30 @@ class Logic {
             mc.thePlayer.inventory.openInventory(mc.thePlayer)
             lastTime = System.currentTimeMillis()
             sendMessage("§c購入のキャンセル 再検索を開始します..")
+            sendDebug("purchaseItem: スロット12の値が期待した値と違います (itemId: ${slot?.stack?.item?.registryName ?: "不明"})")
 
-            currentStep = 3
+            currentStep = swapStep(3)
             return
         }
 
         // 購入処理
+        sendDebug("purchaseItem: 未実装のため購入数のチェックはスキップされました")
         val purchaseAmount: Int = 0 // TODO
         clickSlot(11, 0)
         sendMessage("§a§lスナイプを実行しました")
         sendMessage("§7- チェック回数: $sessionCheckCount")
 
         if (!userConfig.Reconnect) {
-            stopSnipe()
+            stopSnipe("再接続設定がオフ")
+            sendDebug("purchaseItem: Reconnectがオフです")
             return
         }
 
         currentStep = 100
         sessionBuyed += 1
         sessionCheckCount = 0
+        sendDebug("purchaseItem: sessionBuyed: -> $sessionBuyed")
+        sendDebug("purchaseItem: sessionCheckCount: -> $sessionCheckCount")
         lastTime = System.currentTimeMillis()
         return
     }
@@ -379,23 +424,27 @@ class Logic {
     /** Step: 3 */
     private fun reconnectToAuctionHouse() {
         if (!userConfig.Reconnect) {
-            stopSnipe()
+            stopSnipe("再接続設定がオフ")
+            sendDebug("reconnectToAuctionHouse: Reconnectがオフです")
             return
         }
         ChatLib.command("ah")
         lastTime = System.currentTimeMillis()
 
-        currentStep = 4
+        currentStep = swapStep(4)
         return
     }
 
     /** Step: 4 */
     private fun openAuctionBrowser() {
-        if (!isContainerOpened()) return
+        if (!isContainerOpened()) {
+            sendDebug("openAuctionBrowser: isContainerOpened()がFalseです")
+            return
+        }
         clickSlot(11, 0)
         lastTime = System.currentTimeMillis()
 
-        currentStep = 5
+        currentStep = swapStep(5)
         return
     }
 
@@ -403,10 +452,12 @@ class Logic {
     private fun isAuctionBrowser() {
         if (isAuctionBrowserOpened()) {
             lastTime = System.currentTimeMillis()
-            currentStep = 6
+            currentStep = swapStep(6)
+            return
+        } else {
+            sendDebug("isAuctionBrowser: isAuctionBrowserOpened()がFalseです")
             return
         }
-        return
     }
 
     /** Step: 6 */
@@ -415,14 +466,14 @@ class Logic {
             9 * (userConfig.Category - 1), 0
         )
         lastTime = System.currentTimeMillis()
-        currentStep = 0
+        currentStep = swapStep(0)
 
         return
     }
 
     /** Step: 100 */
     private fun confirmPurchase() {
-        currentStep = 3
+        currentStep = swapStep(3)
         isError = false
         lastTime = System.currentTimeMillis()
         if (isError) {
@@ -432,7 +483,8 @@ class Logic {
         }
         else {
             if (!userConfig.Reconnect) {
-                stopSnipe()
+                sendDebug("confirmPurchase: アイテムの購入に成功しました Reconnectがオフのため終了します")
+                stopSnipe("再接続がオフ")
             }
             return
         }
@@ -441,9 +493,10 @@ class Logic {
     /** Step: 12345 */
     private fun backToIsland() {
         ChatLib.command("is")
+        sendDebug("backToIsland: 自島に戻りました 5秒後に動作を再開します")
         lastTime = System.currentTimeMillis() + worldMovingCooldown
 
-        currentStep = 3
+        currentStep = swapStep(3)
         return
     }
 
@@ -454,40 +507,93 @@ class Logic {
         try {
             // タイムアウト処理
             if (System.currentTimeMillis() - lastTime > userConfig.Timeout) {
+                sendDebug("タイムアウト: ${System.currentTimeMillis() - lastTime}ms")
                 mc.thePlayer.inventory.openInventory(mc.thePlayer)
                 if (!userConfig.Reconnect) {
-                    stopSnipe()
+                    stopSnipe("動作のタイムアウト Reconnectがオフ")
                     return
                 }
                 ChatLib.command("ah")
                 lastTime = System.currentTimeMillis()
                 sendMessage("§b動作のタイムアウト オークションの復帰を試みます")
 
-                // ここではdelay待機を行わない
-                openAuctionBrowser()
+                currentStep = swapStep(4)
+                return
+            }
+            // Delay を上回っていないならパス
+            if (System.currentTimeMillis() - lastTime < userConfig.Delay) return
+
+            if (currentStep == 100) {
+                // アイテム購入完了処理
+                sendDebug("confirmPurchase()を呼び出し中", currentStep)
+                confirmPurchase()
                 return
             }
 
             // なぜかメニューを開いていない場合
             if (!isGuiChestOpened()) {
                 if (isWorldChanged) {
+                    sendDebug("ワールド移動が検出されました", currentStep)
                     isWorldChanged = false
                     lastTime = System.currentTimeMillis() + worldMovingCooldown // TODO 5000L を設定できるように
 
-                    currentStep = 12345
+                    currentStep = swapStep(12345)
+                    return
+                }
+                if (currentStep == 12345) {
+                    // is に戻る
+                    sendDebug("backToIsland()を呼び出し中", currentStep)
+                    lastTime = System.currentTimeMillis() + worldMovingCooldown
+
+                    backToIsland()
+                    return
+                }
+                if (currentStep == 3) {
+                    // ah を開く
+                    sendDebug("reconnectToAuctionHouse()を呼び出し中", currentStep)
+                    lastTime = System.currentTimeMillis()
+
+                    reconnectToAuctionHouse()
                     return
                 }
             }
-
             // チェストを開いていないならパス
-            if (!isContainerOpened()) return
+            if (!isContainerOpened()) {
+                sendDebug("ContainerOpenedのチェックに失敗しました ステップ0, 1, 2, 4, 5, 6は処理されません", currentStep)
+                return
+            }
 
-            // TODO
-            mainLogic()
+            if (currentStep == 1) {
+                sendDebug("tryToBuyItem()を呼び出し中", currentStep)
+                tryToBuyItem()
+            }
+            else if (currentStep == 2) {
+                sendDebug("purchaseItem()を呼び出し中", currentStep)
+                purchaseItem()
+            }
+            else if (currentStep == 4) {
+                sendDebug("openAuctionBrowser()を呼び出し中", currentStep)
+                openAuctionBrowser()
+            }
+            else if (currentStep == 5) {
+                sendDebug("isAuctionBrowser()を呼び出し中", currentStep)
+                isAuctionBrowser()
+            }
+            else if (currentStep == 6) {
+                sendDebug("moveCategory()を呼び出し中", currentStep)
+                moveCategory()
+            }
+            else if (currentStep == 0) {
+                sendDebug("mainLogic()を呼び出し中", currentStep)
+                mainLogic()
+            }
         }
         catch (e: Exception) {
             e.printStackTrace()
+            sendDebug("§c実行中にエラーが発生しました。($e)", currentStep)
+            ChatLib.chat("§c実行中にエラーが発生しました。 詳しくはエラーログを確認してください (${e})")
             logger.error(e)
+            return
         }
     }
 
@@ -498,6 +604,7 @@ class Logic {
         if (!userConfig.Active) return
         if (!userConfig.Reconnect) return
 
+        sendDebug("onWorldChange: BinSniperがオンの際にワールドの変更が検知されました")
         isWorldChanged = true
     }
 
@@ -515,11 +622,11 @@ class Logic {
                 }
                 catch (e: InterruptedException) {
                     println("Exception in sending webhook onPurchased: ")
-                    e.printStackTrace()
+                    logger.error(e)
                 }
                 var content: String
                 val username = mc.session.username
-                try {
+                try { // You purchased God Potion for 2,250,000 coins!  < 例
                     val itemForPrice: String = chat.replace("You purchased", "");
                     val onlyPrices: Array<String?> =
                         itemForPrice.split(" for ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -544,7 +651,8 @@ class Logic {
                 Analytics.requestWeb(jsonObj, WebHookUrls.purchasedItemNotification)
             }).start()
         }
-        else if (chat.contains("There was an error with the auction house!")) {
+        else if (chat.contains("There was an error with the auction house!") && userConfig.Active) {
+            sendDebug("アイテム購入時のエラーを検知しました 購入カウントを撤回します")
             isError = true
         }
         return
@@ -555,17 +663,18 @@ class Logic {
     fun onKey(event: GuiScreenEvent.KeyboardInputEvent) {
         if (!isGuiChestOpened()) return
         if (mc.thePlayer.openContainer == null) return
+        resetSession()
         if (Keyboard.isKeyDown(mc.gameSettings.keyBindSneak.keyCode) ||
             Keyboard.isKeyDown(1) ) {
             if (userConfig.Active) {
-                stopSnipe()
+                stopSnipe("動作中にシフトまたはESCが押された")
                 return
             }
         }
         else if (Keyboard.isKeyDown(keyBinSniper.keyCode)) {
             if (keyBinSniper.keyCode == 0) return
             if (userConfig.Active) {
-                stopSnipe()
+                stopSnipe("動作中にキーが押された")
                 return
             }
             // スタート処理
@@ -583,37 +692,26 @@ class Logic {
                 return
             }
             else {
-                val numberInstance: NumberFormat = NumberFormat.getNumberInstance()
-                Util.sendAir()
-                Util.send("§aスナイプの開始")
-                Util.sendAir()
-                Util.send("§7現在の設定一覧:")
-                Util.send("§7- Coin: §6" + numberInstance.format(configUtil.getConfig("Cost")) + "/コイン")
-                Util.send("§7- Category: §6" + configUtil.getConfig("Category") + "/番")
-                Util.send("§7- Amount: §6∞/個")
-                Util.send("§7- Name: §6" + configUtil.getConfig("Name"))
-                Util.send("§7- Mode: §6" + configUtil.getConfig("Mode"))
-                Util.sendAir()
+                currentStep = 0
+                showCurrentSettings(userConfig)
 
-                startSnipe()
                 Thread({
                     try {
+                        Thread.sleep(50)
+                        startSnipe()
                         val username = mc.session.username.toString()
-                        val content = ("```${username} has Started sniping! (" +
-                                numberInstance.format(userConfig.Cost) +
-                                " coins)\n(Delay: " + userConfig.Delay + ") | (Start Purse: " + formatCoinToString(
-                                getPurse().toDouble()) + ")```");
+                        val content = ("```${username} has Started sniping ${userConfig.Name}! (${formatCoinToString(userConfig.Cost.toDouble())} coins)\n" +
+                                "(Delay: " + userConfig.Delay + ") | (Start Purse: ${formatCoinToString(getPurse().toDouble())})```");
                         Analytics.requestWeb(
                             Analytics.setJsonObj(content, null, null), WebHookUrls.purchasedItemNotification
                         )
                     }
                     catch (e: Exception) {
-                        e.printStackTrace()
+                        logger.error(e)
                         autoErrorReportingService(e)
                     }
                 }).start()
             }
-
         }
     }
 }

@@ -42,10 +42,10 @@ public class Analytics {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("content", content);
-        if (username != null && username.length() > 0) {
+        if (username != null && !username.isEmpty()) {
             objectNode.put("username", username);
         }
-        if (avatarUrl != null && avatarUrl.length() > 0) {
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
             objectNode.put("avatar_url", avatarUrl);
         }
         try {

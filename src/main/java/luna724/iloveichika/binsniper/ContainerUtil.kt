@@ -40,7 +40,7 @@ class ContainerUtil {
     }
 
     fun isBinOnly(containerChest: ContainerChest): Boolean {
-        if (!isBinSniperActive()) return false
+        if (!getUserConfig().Active) return false
         if (!isGuiChestOpened()) return false
         if (!isContainerOpened()) return false
 
@@ -58,7 +58,7 @@ class ContainerUtil {
     }
 
     fun isLowest(containerChest: ContainerChest): Boolean {
-        if (!isBinSniperActive()) return false
+        if (!getUserConfig().Active) return false
         if (!isGuiChestOpened()) return false
         if (!isContainerOpened()) return false
 
@@ -78,7 +78,7 @@ class ContainerUtil {
     }
 
     fun isNoFilter(containerChest: ContainerChest): Boolean {
-        if (!isBinSniperActive()) return false
+        if (!getUserConfig().Active) return false
         if (!isGuiChestOpened()) return false
         if (!isContainerOpened()) return false
 

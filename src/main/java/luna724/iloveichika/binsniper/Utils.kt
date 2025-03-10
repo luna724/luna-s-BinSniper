@@ -21,3 +21,4 @@ fun getLoreFromItemStack(i: ItemStack): NBTTagList = i.tagCompound.getCompoundTa
 // Checker
 fun isContainerOpened(): Boolean = mc.thePlayer.openContainer is ContainerChest
 fun isGuiChestOpened(): Boolean = mc.currentScreen is GuiChest
+fun isDecimal(input: String?): Boolean = input?.toDoubleOrNull()?.let { it >= 0 } == true

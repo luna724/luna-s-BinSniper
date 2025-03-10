@@ -35,6 +35,9 @@ FASTMODE, ALLMODEの切り替え
 - `/bs forcestop` <br />
 びんすなの強制停止
 
+- `/bs forcestart` <br />
+GUIを開かずにびんすなを開始
+
 - `/bs uuidmode` <br />
 UUIDに基づいて購入済みかどうかを検出する
 
@@ -83,6 +86,9 @@ Pingより高く設定しないとラグで死ぬ
 - `/bs limbo`　<br />
 disconnect.spam でLimboに飛ぶ
 v2.1で廃止された
+
+- `/bs dev` <br />
+内部処理の表示
 
 ## credits
 - [[Tomochie/@NotTomochie]: Base code](https://web.archive.org/web/20220224153353/https://hackmd.io/@Tomochie/BinSniper)

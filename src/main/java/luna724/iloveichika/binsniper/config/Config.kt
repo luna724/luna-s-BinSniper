@@ -18,23 +18,23 @@ import kotlinx.serialization.builtins.serializer
 
 @Serializable
 data class SessionConfig(
-    val Cost: Int = -1,
-    val Mode: String = "FASTMODE",
-    val Delay: Long = 1000L,
-    val Reconnect: Boolean = true,
-    val Name: String = "None",
-    val Category: Int = 0,
-    val Amount: Int = 0,
-    val Timeout: Long = 30000L,
-    val Message: Boolean = true,
-    val UUIDMode: Boolean = true,
-    val SleepOptimization: Boolean = true,
-    val Active: Boolean = false,
-
+    var Cost: Int = -1,
+    var Mode: String = "FASTMODE",
+    var Delay: Long = 1000L,
+    var Reconnect: Boolean = true,
+    var Name: String = "None",
+    var Category: Int = 0,
+    var Amount: Int = 0,
+    var Timeout: Long = 30000L,
+    var Message: Boolean = true,
+    var UUIDMode: Boolean = true,
+    var SleepOptimization: Boolean = false,
+    var Active: Boolean = false,
+    var Debug: Boolean = false,
     // TODO
-    val TinyDynamicRest: Boolean = true,
-    val AntiAntiMacro: Boolean = true,
-    val BackCompatibility: Boolean = false,
+    var TinyDynamicRest: Boolean = true,
+    var AntiAntiMacro: Boolean = true,
+    var BackCompatibility: Boolean = false,
 )
 
 class Config {
@@ -94,17 +94,19 @@ class Config {
     }
 
     fun savePlayer(
-        sessionConfig: SessionConfig
+        sessionConfig: SessionConfig,
+        key: String? = null
     ) {
+        val mapKey: String = key ?: getPlayerId()
         val allObj = loadAll()
-        allObj[getPlayerId()] = sessionConfig
+        allObj[mapKey] = sessionConfig
 
         saveAll(allObj)
     }
 
-    fun loadPlayer(): SessionConfig {
+    fun loadPlayer(key: String? = null): SessionConfig {
         val allObj = loadAll()
-        val id = getPlayerId()
+        val id: String = key ?: getPlayerId()
 
         if (id in allObj.keys) {
             return allObj[id]!!

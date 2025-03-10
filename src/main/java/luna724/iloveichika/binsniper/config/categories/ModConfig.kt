@@ -7,7 +7,7 @@ import luna724.iloveichika.binsniper.BinSniper
 
 class ModConfig : Config() {
     override fun getTitle(): String {
-        return ("§dLuna's BinSniper " + BinSniper.VERSION) + " by §dluna724§r, config menu by §channibal2§r, §5Moulberry §rand §5nea89";
+        return "§dLuna's BinSniper ${BinSniper.VERSION} by §dluna724§r, config menu by §channibal2§r, §5Moulberry §rand §5nea89";
     }
 
     override fun saveNow() {
